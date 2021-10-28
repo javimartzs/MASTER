@@ -1,0 +1,55 @@
+---
+title: "Tema 3 Analisis de Coyuntura"
+author: "Javier Martínez Santos"
+date: "10/13/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+library(pwt10)
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+library(TTR)
+library(dineq)
+library(gglorenz)
+data("pwt10.0")
+```
+
+## Ejercicio 1
+```{r include=FALSE}
+df <- pwt10.0 %>% filter(year == 2017) %>% select(country, year, rgdpo, emp, hc) %>% group_by(country) %>% 
+  mutate(prod.trab = rgdpo/emp)
+
+df <- df %>% mutate(log(prod.trab),
+                    log(hc))
+```
+```{r echo=FALSE, message=FALSE}
+ggplot(df, aes(log(prod.trab), log(hc))) + geom_point()+
+  theme_bw()
+```
+
+
+## Ejercicio 3
+```{r include=FALSE}
+df <- pwt10.0 %>% filter(year %in% 2000:2017) %>% select(isocode, year, rgdpo, emp, csh_i, pop, hc) %>% group_by(isocode) %>% mutate(prod.trab = rgdpo/emp,
+           tasa.pob = ROC(pop, n=1))
+
+
+df1 <- df %>% group_by(isocode) %>% 
+  summarise(media.pob = mean(tasa.pob, na.rm = T),
+            inversion.media = mean(csh_i)/0.24121228)
+
+df.hc <- df %>% select(isocode, year, hc) %>% filter(year == 2017)
+
+df.plot <- left_join(df1, df.hc)
+
+df.plot <- df.plot %>% mutate(y.estimado= (inversion.media/((0.05+0.02+media.pob)/(0.05+0.02+8.423796e-03)))^((1/3)/(1-(1/3)))*hc)
+
+```
+```{r echo=FALSE, message=FALSE}
+ggplot(ej1, aes(media.inv, prod.trab)) + geom_point()
+
+ggplot(ej1, aes(media.pob, prod.trab)) + geom_point()
+
+```
